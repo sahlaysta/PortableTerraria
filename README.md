@@ -1,6 +1,9 @@
 # portableterraria
 Generate a Portable Terraria, to run on other PCs without admin perms
 
+<img src ="https://i.imgur.com/10hexwZ.png"/>
+<img src ="https://i.imgur.com/X23GO2U.png"/>
+
 ## Licensing
 
 <b>portableterraria</b> MIT License, Copyright (c) 2022 - sahlaysta, see https://github.com/sahlaysta/portableterraria/blob/main/LICENSE

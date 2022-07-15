@@ -1,5 +1,5 @@
 # portableterraria
-Generate a Portable Terraria, to run on other PCs without admin perms
+Generate a Portable Terraria, to run on USB
 
 <img src ="https://i.imgur.com/10hexwZ.png"/>
 <img src ="https://i.imgur.com/X23GO2U.png"/>

@@ -11,6 +11,25 @@ namespace Sahlaysta.PortableTerrariaCommon
     // dialog with label, progress bar, and cancel button
     class GuiProgressDialog : Form
     {
+        //atomic bool
+        class AtomicBool
+        {
+            public bool Value { get { return val; } set { val = value; } }
+            volatile bool val;
+        }
+
+        bool finished = false;
+        bool userCanceled = false;
+        bool closeWhenDone = false;
+        bool hasPassedZeroPercent = false;
+        volatile int progressVal = 0, progressMax = 100;
+        AtomicBool timerStopped = new AtomicBool();
+        Timer progressTimer;
+        Label label;
+        Label progressLabel;
+        GuiPanelBuilder.OkCancelButtonPanel buttonPanel;
+        ProgressBar progressBar;
+
         //constructor
         public GuiProgressDialog(string labelText, string title)
         {
@@ -228,26 +247,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             stopTimer();
             progressLabel.Text = "Canceling...";
             UserCanceled?.Invoke(null, EventArgs.Empty);
-        }
-
-
-        bool finished = false;
-        bool userCanceled = false;
-        bool closeWhenDone = false;
-        bool hasPassedZeroPercent = false;
-        volatile int progressVal = 0, progressMax = 100;
-        AtomicBool timerStopped = new AtomicBool();
-        Timer progressTimer;
-        Label label;
-        Label progressLabel;
-        GuiPanelBuilder.OkCancelButtonPanel buttonPanel;
-        ProgressBar progressBar;
-
-        //atomic bool
-        class AtomicBool
-        {
-            public bool Value { get { return val; } set { val = value; } }
-            volatile bool val;
         }
     }
 }

@@ -9,6 +9,9 @@ namespace Sahlaysta.PortableTerrariaCommon
     //thread safe atomic obj
     class AtomicObj<T>
     {
+        volatile object val;
+        readonly object objLock = new object();
+
         //constructor
         public AtomicObj(T obj = default)
         {
@@ -33,8 +36,5 @@ namespace Sahlaysta.PortableTerrariaCommon
                 }
             }
         }
-
-        volatile object val;
-        readonly object objLock = new object();
     }
 }

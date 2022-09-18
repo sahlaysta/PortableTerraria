@@ -13,6 +13,8 @@ namespace Sahlaysta.PortableTerrariaCommon
     //run .csx script
     class Scripting
     {
+        readonly CompilerResults crs;
+
         //constructor
         Scripting(string script)
         {
@@ -77,7 +79,5 @@ namespace Sahlaysta.PortableTerrariaCommon
                 return results;
             }
         }
-
-        readonly CompilerResults crs;
     }
 }

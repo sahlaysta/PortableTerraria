@@ -18,6 +18,10 @@ namespace Sahlaysta.PortableTerrariaCommon
         //dll
         public struct Dll
         {
+            readonly Program _program;
+            string _filePath, _name;
+            bool _status;
+
             //constructors
             public Dll(Program program, string filePath)
             {
@@ -39,15 +43,13 @@ namespace Sahlaysta.PortableTerrariaCommon
             public string FilePath { get { return _filePath; } }
             public string Name { get { return _name; } }
             public bool Status { get { return _status; } }
-
-            readonly Program _program;
-            string _filePath, _name;
-            bool _status;
         }
 
         //program
         public struct Program
         {
+            readonly string _name, _link;
+
             public Program(string name, string link)
             {
                 _name = name;
@@ -73,9 +75,64 @@ namespace Sahlaysta.PortableTerrariaCommon
                 "Microsoft Visual C++ 2010 Service Pack 1" +
                     " Redistributable Package MFC Security Update",
                 "https://www.microsoft.com/en-us/download/details.aspx?id=26999");
-
-            readonly string _name, _link;
         }
+
+        //dll fields
+        static readonly (Program, string)[] dlls =
+        {
+            (Program.DirectX,
+                "C:\\Windows\\System32\\D3DX9_33.dll"),
+            (Program.DirectX,
+                "C:\\Windows\\System32\\D3DX9_41.dll"),
+            (Program.DirectX,
+                "C:\\Windows\\System32\\X3DAudio1_7.dll"),
+            (Program.DirectX,
+                "C:\\Windows\\System32\\xactengine3_6.dll"),
+            (Program.DirectX,
+                "C:\\Windows\\System32\\XAudio2_6.dll"),
+            (Program.DirectX,
+                "C:\\Windows\\System32\\xinput1_3.dll"),
+
+            (Program.VisualCPP,
+                "C:\\Windows\\System32\\msvcp100.dll"),
+            (Program.VisualCPP,
+                "C:\\Windows\\System32\\msvcr100.dll"),
+
+            (Program.XnaFramework,
+                "C:\\Program Files (x86)\\Common Files" +
+                    "\\Microsoft Shared\\XNA\\Framework\\v4.0\\XnaNative.dll"),
+            (Program.XnaFramework,
+                "C:\\Program Files (x86)\\Common Files" +
+                    "\\Microsoft Shared\\XNA\\Framework\\Shared\\xnavisualizer.dll"),
+            (Program.XnaFramework,
+                "C:\\Program Files (x86)\\Common Files" +
+                    "\\Microsoft Shared\\XNA\\Framework\\Shared\\XnaVisualizerPS.dll"),
+            (Program.XnaFramework,
+                "C:\\Program Files (x86)\\Microsoft XNA" +
+                    "\\XNA Game Studio\\v4.0\\Redist\\DX Redist\\DSETUP.dll"),
+            (Program.XnaFramework,
+                "C:\\Program Files (x86)\\Microsoft XNA" +
+                    "\\XNA Game Studio\\v4.0\\Redist\\DX Redist\\dsetup32.dll")
+        };
+
+        const string xnaPath = "C:\\Windows\\Microsoft.NET\\assembly";
+        static readonly (string, string[])[] xnaDlls =
+        {
+            ("GAC_32", new string[] {
+                "Microsoft.Xna.Framework",
+                "Microsoft.Xna.Framework.Game",
+                "Microsoft.Xna.Framework.Graphics",
+                "Microsoft.Xna.Framework.Xact"
+            }),
+            ("GAC_MSIL", new string[] {
+                "Microsoft.Xna.Framework.Avatar",
+                "Microsoft.Xna.Framework.GamerServices",
+                "Microsoft.Xna.Framework.Input.Touch",
+                "Microsoft.Xna.Framework.Net",
+                "Microsoft.Xna.Framework.Storage",
+                "Microsoft.Xna.Framework.Video"
+            })
+        };
 
         //resolve
         public static Dll[] ResolveTerrariaDlls(string xnaFrameworkVersion = null)
@@ -179,62 +236,5 @@ namespace Sahlaysta.PortableTerrariaCommon
             }
             return vers.ToArray();
         }
-
-        //dll fields
-        static readonly (Program, string)[] dlls =
-        {
-            (Program.DirectX,
-                "C:\\Windows\\System32\\D3DX9_33.dll"),
-            (Program.DirectX,
-                "C:\\Windows\\System32\\D3DX9_41.dll"),
-            (Program.DirectX,
-                "C:\\Windows\\System32\\X3DAudio1_7.dll"),
-            (Program.DirectX,
-                "C:\\Windows\\System32\\xactengine3_6.dll"),
-            (Program.DirectX,
-                "C:\\Windows\\System32\\XAudio2_6.dll"),
-            (Program.DirectX,
-                "C:\\Windows\\System32\\xinput1_3.dll"),
-
-            (Program.VisualCPP,
-                "C:\\Windows\\System32\\msvcp100.dll"),
-            (Program.VisualCPP,
-                "C:\\Windows\\System32\\msvcr100.dll"),
-
-            (Program.XnaFramework,
-                "C:\\Program Files (x86)\\Common Files" +
-                    "\\Microsoft Shared\\XNA\\Framework\\v4.0\\XnaNative.dll"),
-            (Program.XnaFramework,
-                "C:\\Program Files (x86)\\Common Files" +
-                    "\\Microsoft Shared\\XNA\\Framework\\Shared\\xnavisualizer.dll"),
-            (Program.XnaFramework,
-                "C:\\Program Files (x86)\\Common Files" +
-                    "\\Microsoft Shared\\XNA\\Framework\\Shared\\XnaVisualizerPS.dll"),
-            (Program.XnaFramework,
-                "C:\\Program Files (x86)\\Microsoft XNA" +
-                    "\\XNA Game Studio\\v4.0\\Redist\\DX Redist\\DSETUP.dll"),
-            (Program.XnaFramework,
-                "C:\\Program Files (x86)\\Microsoft XNA" +
-                    "\\XNA Game Studio\\v4.0\\Redist\\DX Redist\\dsetup32.dll")
-        };
-
-        const string xnaPath = "C:\\Windows\\Microsoft.NET\\assembly";
-        static readonly (string, string[])[] xnaDlls =
-        {
-            ("GAC_32", new string[] {
-                "Microsoft.Xna.Framework",
-                "Microsoft.Xna.Framework.Game",
-                "Microsoft.Xna.Framework.Graphics",
-                "Microsoft.Xna.Framework.Xact"
-            }),
-            ("GAC_MSIL", new string[] {
-                "Microsoft.Xna.Framework.Avatar",
-                "Microsoft.Xna.Framework.GamerServices",
-                "Microsoft.Xna.Framework.Input.Touch",
-                "Microsoft.Xna.Framework.Net",
-                "Microsoft.Xna.Framework.Storage",
-                "Microsoft.Xna.Framework.Video"
-            })
-        };
     }
 }

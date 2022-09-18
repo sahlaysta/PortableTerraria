@@ -11,6 +11,8 @@ namespace Sahlaysta.PortableTerrariaCommon
     //groupbox that takes a control to fill it, and autosizes based on its size
     class GuiGroupBox : GroupBox
     {
+        readonly int borderX, borderY, borderWidth, borderHeight;
+
         public GuiGroupBox()
         {
             //control autosize
@@ -25,7 +27,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             borderWidth = dr.Left - bounds.Left + bounds.Right - dr.Right;
             borderHeight = dr.Top - bounds.Top + bounds.Bottom - dr.Bottom;
         }
-        readonly int borderX, borderY, borderWidth, borderHeight;
 
         void adjustBounds()
         {

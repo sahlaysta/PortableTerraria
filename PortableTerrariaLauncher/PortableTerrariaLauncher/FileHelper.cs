@@ -14,6 +14,13 @@ namespace Sahlaysta.PortableTerrariaLauncher
         public static string ApplicationFolder { get => ptlPath; }
         public static string DirectXAudioFolder { get => dxAudioPath; }
 
+        static readonly string localAppData =
+            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
+        static readonly string ptlPath =
+            Path.Combine(localAppData, "PortableTerrariaLauncher");
+        static readonly string dxAudioPath =
+            Path.Combine(localAppData, "DirectXAudio");
+
         // Create the directory for a file, to be able to create it
         public static void CreateDirectoryOfFilePath(string filePath)
         {
@@ -75,13 +82,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
                 addDirs(d, dirs, depth + 1);
             }
         }
-
-
-        static readonly string localAppData =
-            Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData);
-        static readonly string ptlPath =
-            Path.Combine(localAppData, "PortableTerrariaLauncher");
-        static readonly string dxAudioPath =
-            Path.Combine(localAppData, "DirectXAudio");
     }
 }

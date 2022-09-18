@@ -11,6 +11,11 @@ namespace Sahlaysta.PortableTerrariaCommon
     //puts controls in vertical consecution
     class GuiPanelBuilder
     {
+        readonly Panel panel;
+        readonly Form form;
+        int y = 0;
+        AnchorStyles anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
+
         //constructor
         public GuiPanelBuilder(Form form)
         {
@@ -57,16 +62,11 @@ namespace Sahlaysta.PortableTerrariaCommon
                 | AnchorStyles.Right | AnchorStyles.Bottom;
         }
 
-        readonly Panel panel;
-        readonly Form form;
-        int y = 0;
-        AnchorStyles anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right;
-
-
-
         // group of "OK" button and "Cancel" button
         public class OkCancelButtonPanel : UserControl
         {
+            readonly Button okButton, cancelButton;
+
             //constructor
             public OkCancelButtonPanel(
                 string okButtonText = "OK", string cancelButtonText = "Cancel")
@@ -98,8 +98,6 @@ namespace Sahlaysta.PortableTerrariaCommon
                     Text = buttonText
                 };
             }
-
-            readonly Button okButton, cancelButton;
         }
     }
 }

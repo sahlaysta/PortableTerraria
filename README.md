@@ -4,7 +4,7 @@ Generate a Portable Terraria, to run on USB
 
 (no admin, audio works, can change save path)
 
-<img src ="https://i.imgur.com/10hexwZ.png"/>
+<img src ="https://i.imgur.com/eH3lJTQ.png"/>
 <img src ="https://i.imgur.com/X23GO2U.png"/>
 
 ## Licensing

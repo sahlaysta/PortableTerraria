@@ -20,6 +20,8 @@ namespace Sahlaysta.PortableTerrariaLauncher
         [DataContract]
         class Preference
         {
+            string _name;
+            object _val;
             public Preference() : this(null, null) { }
             public Preference(string name, object value)
             {
@@ -30,9 +32,17 @@ namespace Sahlaysta.PortableTerrariaLauncher
             public string Name { get => _name; set => _name = value; }
             [DataMember]
             public object Value { get => _val; set => _val = value; }
-            string _name;
-            object _val;
         }
+
+        FileStream fs;
+        static readonly string prefsFilePath =
+            Path.Combine(FileHelper.ApplicationFolder, "prefs.xml");
+        static readonly string documentsFolder =
+            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
+        static readonly string defaultSaveDir =
+            Path.Combine(Path.Combine(documentsFolder, "My Games", "Terraria"));
+        static readonly PortableTerrariaLauncherPreferences defaultPrefs
+            = new PortableTerrariaLauncherPreferences(null);
 
         //constructor
         PortableTerrariaLauncherPreferences(FileStream fileStream)
@@ -190,17 +200,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
                     true)
                         .Any());
         }
-
-        FileStream fs;
-        static readonly string prefsFilePath =
-            Path.Combine(FileHelper.ApplicationFolder, "prefs.xml");
-
-        static readonly string documentsFolder =
-            Environment.GetFolderPath(Environment.SpecialFolder.MyDocuments);
-        static readonly string defaultSaveDir =
-            Path.Combine(Path.Combine(documentsFolder, "My Games", "Terraria"));
-
-        static readonly PortableTerrariaLauncherPreferences defaultPrefs
-            = new PortableTerrariaLauncherPreferences(null);
     }
 }

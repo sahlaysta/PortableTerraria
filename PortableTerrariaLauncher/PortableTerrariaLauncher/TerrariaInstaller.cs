@@ -13,6 +13,8 @@ namespace Sahlaysta.PortableTerrariaLauncher
     //async installs terraria
     class TerrariaInstaller : GuiProgressibleOperation
     {
+        readonly string installDir;
+
         //constructor
         public TerrariaInstaller(string installationDirectory)
         {
@@ -369,7 +371,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
                 }
             }
         }
-
-        readonly string installDir;
     }
 }

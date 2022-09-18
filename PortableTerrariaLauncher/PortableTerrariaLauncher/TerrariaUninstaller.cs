@@ -10,6 +10,8 @@ namespace Sahlaysta.PortableTerrariaLauncher
     //uninstalls terraria
     class TerrariaUninstaller : GuiProgressibleOperation
     {
+        readonly string installDir;
+
         //constructor
         public TerrariaUninstaller(string installationDirectory)
         {
@@ -39,7 +41,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
                     installDir, progressChanged, requestCancel);
             }
         }
-
-        readonly string installDir;
     }
 }

@@ -28,6 +28,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             bool c;
         }
 
+        string dlgTitle, fileFilter;
+        IntPtr? dlgOwner;
+
         //constructor
         public GuiFileSelectTextBox()
         {
@@ -139,8 +142,6 @@ namespace Sahlaysta.PortableTerrariaCommon
         }
 
         //file prompt
-        string dlgTitle, fileFilter;
-        IntPtr? dlgOwner;
         string promptFile()
         {
             string title = dlgTitle ?? button.Text;

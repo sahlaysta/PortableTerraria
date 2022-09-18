@@ -15,6 +15,8 @@ namespace Sahlaysta.PortableTerrariaCommon
         //reflection AssemblyDefinition
         public class AssemblyDefinition : IDisposable
         {
+            readonly IDisposable instance;
+
             //reflection constructor
             AssemblyDefinition(IDisposable instance)
             {
@@ -46,13 +48,13 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 instance.Dispose();
             }
-
-            readonly IDisposable instance;
         }
 
         //reflection ModuleDefinition
         public class ModuleDefinition : IDisposable
         {
+            internal readonly IDisposable instance;
+
             //reflection constructor
             internal ModuleDefinition(IDisposable instance)
             {
@@ -72,6 +74,8 @@ namespace Sahlaysta.PortableTerrariaCommon
             //reflection enumerable
             internal class ResourceEnumerable : IEnumerable<Resource>
             {
+                internal readonly ModuleDefinition moduleDefinition;
+
                 internal ResourceEnumerable(ModuleDefinition moduleDefinition)
                 {
                     this.moduleDefinition = moduleDefinition;
@@ -84,7 +88,6 @@ namespace Sahlaysta.PortableTerrariaCommon
                 {
                     return moduleDefinition.getResourceEnumerator();
                 }
-                internal readonly ModuleDefinition moduleDefinition;
             }
 
             //reflection enumerator
@@ -96,6 +99,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             }
             class ResourceEnumerator : IEnumerator<Resource>
             {
+                readonly IEnumerator ie;
+                Resource current;
+
                 //reflection constructor
                 public ResourceEnumerator(IEnumerator enumerator)
                 {
@@ -123,17 +129,14 @@ namespace Sahlaysta.PortableTerrariaCommon
                 {
                     return current ?? (current = new Resource(ie.Current));
                 }
-
-                readonly IEnumerator ie;
-                Resource current;
             }
-
-            internal readonly IDisposable instance;
         }
 
         //reflection Resource
         public class Resource
         {
+            readonly object instance;
+
             //reflection constructor
             internal Resource(object instance)
             {
@@ -145,8 +148,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 get => (string)rName.GetValue(instance);
             }
-
-            readonly object instance;
         }
 
         //reflection ManifestResourceAttributes
@@ -178,6 +179,8 @@ namespace Sahlaysta.PortableTerrariaCommon
         //reflection EmbeddedResource
         public class EmbeddedResource
         {
+            internal readonly object instance;
+
             //reflection constructor
             public EmbeddedResource(
                 String arg0,
@@ -214,8 +217,6 @@ namespace Sahlaysta.PortableTerrariaCommon
                 set => rEmbeddedResourceStream
                     .SetValue(null, value);
             }
-
-            internal readonly object instance;
         }
 
         //reflection Collection
@@ -239,6 +240,8 @@ namespace Sahlaysta.PortableTerrariaCommon
         //reflection AssemblyNameDefinition
         public class AssemblyNameDefinition
         {
+            readonly object instance;
+
             //reflection constructor
             internal AssemblyNameDefinition(object instance)
             {
@@ -250,8 +253,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 get => (string)rName3.GetValue(instance);
             }
-
-            readonly object instance;
         }
 
 

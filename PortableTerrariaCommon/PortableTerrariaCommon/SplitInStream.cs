@@ -10,6 +10,10 @@ namespace Sahlaysta.PortableTerrariaCommon
     //combines multiple read streams into one
     class SplitInStream : Stream
     {
+        long totalBytesRead = 0;
+        readonly Func<Stream> getNextStream;
+        Stream stream;
+
         //constructor
         public SplitInStream(Func<Stream> getNextStream)
         {
@@ -45,8 +49,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             throw new NotSupportedException();
         }
 
-
-
         int read(byte[] buffer, int offset, int count)
         {
             if (stream == null)
@@ -63,9 +65,5 @@ namespace Sahlaysta.PortableTerrariaCommon
             totalBytesRead += read;
             return read;
         }
-
-        long totalBytesRead = 0;
-        readonly Func<Stream> getNextStream;
-        Stream stream;
     }
 }

@@ -18,6 +18,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             //reflection enumerator
             class ZipEntryEnumerator : IEnumerator<ZipEntry>
             {
+                readonly IEnumerator ie;
+                ZipEntry current;
+
                 //reflection constructor
                 public ZipEntryEnumerator(IEnumerator enumerator)
                 {
@@ -45,10 +48,9 @@ namespace Sahlaysta.PortableTerrariaCommon
                 {
                     return current ?? (current = new ZipEntry(ie.Current));
                 }
-
-                readonly IEnumerator ie;
-                ZipEntry current;
             }
+
+            readonly IDisposable instance;
 
             //reflection constructor
             public ZipFile() : this(
@@ -131,13 +133,13 @@ namespace Sahlaysta.PortableTerrariaCommon
                     rEnumerator.Invoke(instance, null);
                 return new ZipEntryEnumerator(ie);
             }
-
-            readonly IDisposable instance;
         }
 
         //reflection ZipEntry
         public class ZipEntry
         {
+            readonly object instance;
+
             //reflection constructor
             internal ZipEntry(object instance)
             {
@@ -153,13 +155,13 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 rExtract.Invoke(instance, new object[] { arg0 });
             }
-
-            readonly object instance;
         }
 
         //reflection SaveProgressEventArgs
         public class SaveProgressEventArgs : EventArgs
         {
+            readonly EventArgs e;
+
             //reflection constructor
             internal SaveProgressEventArgs(EventArgs e)
             {
@@ -185,8 +187,6 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 get => (int)rEntriesTotal.GetValue(e);
             }
-
-            readonly EventArgs e;
         }
 
         //assembly

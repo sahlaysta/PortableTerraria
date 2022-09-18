@@ -139,7 +139,7 @@ namespace Sahlaysta.PortableTerrariaCreator
             //the create button
             createBtn = new Button()
             {
-                Text = "Create"
+                Text = "Create exe"
             };
             createBtn.Click += (o, e) => create();
             pb.AddControl(createBtn);

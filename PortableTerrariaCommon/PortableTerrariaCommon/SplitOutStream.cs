@@ -15,6 +15,7 @@ namespace Sahlaysta.PortableTerrariaCommon
         //input stream
         class InputStream : Stream
         {
+            readonly SplitOutStream sos;
             internal InputStream(SplitOutStream sos)
             {
                 this.sos = sos;
@@ -46,12 +47,12 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 return sos.read(buffer, offset, count);
             }
-            readonly SplitOutStream sos;
         }
 
         //output stream
         class OutputStream : Stream
         {
+            readonly SplitOutStream sos;
             internal OutputStream(SplitOutStream sos)
             {
                 this.sos = sos;
@@ -82,8 +83,20 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 sos.write(buffer, offset, count);
             }
-            readonly SplitOutStream sos;
         }
+
+        readonly InputStream inputStream;
+        readonly OutputStream outputStream;
+        readonly Action<Stream> writeDataToStream;
+        readonly int splitSize;
+        volatile byte[] buffer;
+        volatile int offset;
+        volatile int count;
+        volatile int bytesLeft;
+        readonly object objLock = new object();
+        volatile bool waitingWrite;
+        volatile bool ended;
+        long totalBytesRead = 0;
 
         //constructor
         public SplitOutStream(
@@ -211,18 +224,5 @@ namespace Sahlaysta.PortableTerrariaCommon
                 }
             }
         }
-
-        readonly InputStream inputStream;
-        readonly OutputStream outputStream;
-        readonly Action<Stream> writeDataToStream;
-        readonly int splitSize;
-        volatile byte[] buffer;
-        volatile int offset;
-        volatile int count;
-        volatile int bytesLeft;
-        readonly object objLock = new object();
-        volatile bool waitingWrite;
-        volatile bool ended;
-        long totalBytesRead = 0;
     }
 }

@@ -179,6 +179,15 @@ namespace Sahlaysta.PortableTerrariaLauncher
             }
         }
 
+        string saveDir;
+        bool installed;
+        readonly AtomicObj<TerrariaLauncher> atl =
+            new AtomicObj<TerrariaLauncher>();
+        readonly AtomicObj<TerrariaState> terrariaState =
+            new AtomicObj<TerrariaState>();
+        static readonly string installDir =
+            Path.Combine(FileHelper.ApplicationFolder, "Terraria");
+
         //prefs
         bool refreshPrefs()
         {
@@ -399,15 +408,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
             var tu = new TerrariaUninstaller(installDir);
             GuiHelper.RunProgressDialog("Uninstall", Text, tu, Handle);
         }
-
-
-        string saveDir;
-        bool installed;
-        readonly AtomicObj<TerrariaLauncher> atl =
-            new AtomicObj<TerrariaLauncher>();
-        readonly AtomicObj<TerrariaState> terrariaState =
-            new AtomicObj<TerrariaState>();
-        static readonly string installDir =
-            Path.Combine(FileHelper.ApplicationFolder, "Terraria");
     }
 }

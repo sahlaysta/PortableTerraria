@@ -12,6 +12,8 @@ namespace Sahlaysta.PortableTerrariaCommon
         //event end eventargs
         public class EndEventArgs : EventArgs
         {
+            readonly Exception _error;
+            readonly bool _canceled;
             public EndEventArgs(Exception error, bool canceled)
             {
                 _error = error;
@@ -19,13 +21,13 @@ namespace Sahlaysta.PortableTerrariaCommon
             }
             public Exception Error { get { return _error; } }
             public bool IsCanceled { get { return _canceled; } }
-            readonly Exception _error;
-            readonly bool _canceled;
         }
 
         //event progress eventargs
         public class ProgressEventArgs : EventArgs
         {
+            readonly int _numerator;
+            readonly int _denominator;
             public ProgressEventArgs(int numerator, int denominator)
             {
                 _numerator = numerator;
@@ -33,9 +35,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             }
             public int Numerator { get { return _numerator; } }
             public int Denominator { get { return _denominator; } }
-            readonly int _numerator;
-            readonly int _denominator;
         }
+
+        volatile bool ended, canceled;
 
         //public operations
         public bool Ended { get => ended; }
@@ -76,7 +78,5 @@ namespace Sahlaysta.PortableTerrariaCommon
         {
             Progress?.Invoke(this, new ProgressEventArgs(numerator, denominator));
         }
-
-        volatile bool ended, canceled;
     }
 }

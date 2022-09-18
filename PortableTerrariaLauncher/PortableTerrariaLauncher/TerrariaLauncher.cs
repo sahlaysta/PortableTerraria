@@ -30,6 +30,11 @@ namespace Sahlaysta.PortableTerrariaLauncher
             public ClosedEventArgs() { }
         }
 
+        volatile Process process;
+        readonly AtomicObj<bool> ended = new AtomicObj<bool>();
+        readonly string installDir, saveDir;
+        readonly bool mods;
+
         //constructor
         public TerrariaLauncher(
             string installationDirectory,
@@ -138,10 +143,5 @@ namespace Sahlaysta.PortableTerrariaLauncher
                 : Path.Combine(
                     installDir, "Terraria.exe");
         }
-
-        volatile Process process;
-        readonly AtomicObj<bool> ended = new AtomicObj<bool>();
-        readonly string installDir, saveDir;
-        readonly bool mods;
     }
 }

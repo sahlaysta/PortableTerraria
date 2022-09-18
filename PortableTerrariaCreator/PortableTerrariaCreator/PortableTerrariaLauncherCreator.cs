@@ -15,6 +15,12 @@ namespace Sahlaysta.PortableTerrariaCreator
         //creator options
         public struct Options
         {
+            readonly string _outputPath;
+            readonly string _terrariaPath;
+            readonly IEnumerable<TerrariaResolver.Dll> _dlls;
+            readonly bool _registerHKCU;
+            readonly string _scriptPath;
+
             //constructor
             public Options(
                 string outputPath,
@@ -36,13 +42,9 @@ namespace Sahlaysta.PortableTerrariaCreator
             public IEnumerable<TerrariaResolver.Dll> Dlls { get { return _dlls; } }
             public bool RegisterHKCU { get { return _registerHKCU; } }
             public string ScriptPath { get { return _scriptPath; } }
-
-            readonly string _outputPath;
-            readonly string _terrariaPath;
-            readonly IEnumerable<TerrariaResolver.Dll> _dlls;
-            readonly bool _registerHKCU;
-            readonly string _scriptPath;
         }
+
+        readonly Options options;
 
         //constructor
         public PortableTerrariaLauncherCreator(Options options)
@@ -260,7 +262,5 @@ namespace Sahlaysta.PortableTerrariaCreator
                 new Type[] { typeof(Stream) },
                 new object[] { baseStream });
         }
-
-        readonly Options options;
     }
 }

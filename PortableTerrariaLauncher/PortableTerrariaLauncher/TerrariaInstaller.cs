@@ -284,8 +284,8 @@ namespace Sahlaysta.PortableTerrariaLauncher
             //register dlls
             registerAudioDlls(newxAudio2_6_dll, newxactengine3_6_dll);
 
-            //file that tells its registered
-            new FileStream(registered, FileMode.Create, FileAccess.Write);
+            //this file's existence tells it's registered
+            using (new FileStream(registered, FileMode.Create, FileAccess.Write)) { }
         }
         //registers XAudio2_6.dll and xactengine3_6.dll to HKCU
         static void registerAudioDlls(

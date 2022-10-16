@@ -46,6 +46,8 @@ namespace Sahlaysta.PortableTerrariaLauncher
         ContextMenuStrip miscMenu;
         void init()
         {
+            runFormScript();
+
             //build main panel
             var pb = new GuiPanelBuilder(this);
 
@@ -407,6 +409,30 @@ namespace Sahlaysta.PortableTerrariaLauncher
             //uninstall terraria
             var tu = new TerrariaUninstaller(installDir);
             GuiHelper.RunProgressDialog("Uninstall", Text, tu, Handle);
+        }
+
+        //run form script
+        void runFormScript()
+        {
+            Stream stream;
+            Scripting scr;
+            try
+            {
+                stream = GuiHelper.GetResourceStream("script.csx");
+            }
+            catch (ArgumentException)
+            {
+                return;
+            }
+            using (stream)
+            {
+                scr = Scripting.Create(stream);
+            }
+            scr.InvokePublicStaticMethod<object>(
+                "PortableTerrariaScript.Script",
+                "OnForm",
+                new Type[] { typeof(Form) },
+                new object[] { this });
         }
     }
 }

@@ -88,6 +88,7 @@ namespace Sahlaysta.PortableTerrariaCommon
         readonly InputStream inputStream;
         readonly OutputStream outputStream;
         readonly Action<Stream> writeDataToStream;
+        readonly Action<Exception> onError;
         readonly int splitSize;
         volatile byte[] buffer;
         volatile int offset;
@@ -100,10 +101,12 @@ namespace Sahlaysta.PortableTerrariaCommon
 
         //constructor
         public SplitOutStream(
-            Action<Stream> writeDataToStream, int splitSize)
+            Action<Stream> writeDataToStream, int splitSize,
+            Action<Exception> onError)
         {
             this.writeDataToStream = writeDataToStream;
             this.splitSize = splitSize;
+            this.onError = onError;
             inputStream = new InputStream(this);
             outputStream = new OutputStream(this);
             init();
@@ -120,7 +123,14 @@ namespace Sahlaysta.PortableTerrariaCommon
             Task.Run(() =>
             {
                 //multithreaded write stream data
-                writeDataToStream(outputStream);
+                try
+                {
+                    writeDataToStream(outputStream);
+                }
+                catch (Exception e)
+                {
+                    onError(e);
+                }
                 ended = true;
                 lock (objLock)
                 {

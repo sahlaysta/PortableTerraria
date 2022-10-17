@@ -97,6 +97,7 @@ namespace Sahlaysta.PortableTerrariaCreator
         void createPTL(Stream stream)
         {
             //edit exe embedded resources
+            Exception err = null;
             using (var exe = GuiHelper.GetResourceStream(
                 "Sahlaysta.PortableTerrariaLauncher.exe"))
             using (var ad = MonoCecilAssembly
@@ -160,7 +161,11 @@ namespace Sahlaysta.PortableTerrariaCreator
                     {
                         zipTerraria(s);
                     }
-                    var sos = new SplitOutStream(writeDataToStream, splitSize);
+                    void onError(Exception e)
+                    {
+                        err = e;
+                    }
+                    var sos = new SplitOutStream(writeDataToStream, splitSize, onError);
                     for (long i = 0; i < splitCount; i++)
                     {
                         string name = namep + "terraria.zip." + (i + 1).ToString(format);
@@ -194,6 +199,8 @@ namespace Sahlaysta.PortableTerrariaCreator
                 //write .exe
                 ad.Write(stream);
             }
+            if (err != null)
+                throw err;
         }
         void zipTerraria(Stream stream)
         {

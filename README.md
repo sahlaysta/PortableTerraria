@@ -9,7 +9,7 @@ Generate a Portable Terraria, to run on USB
 
 ## Licensing
 
-<b>PortableTerraria</b> MIT License, Copyright (c) 2022 - sahlaysta, see https://github.com/sahlaysta/PortableTerraria/blob/main/LICENSE
+<b>PortableTerraria</b> MIT License, Copyright (c) 2024 - sahlaysta, see https://github.com/sahlaysta/PortableTerraria/blob/main/LICENSE
 
 <b>DotNetZip</b> Microsoft Public License, DinoChiesa, see https://github.com/DinoChiesa/DotNetZip/blob/master/License.txt
 

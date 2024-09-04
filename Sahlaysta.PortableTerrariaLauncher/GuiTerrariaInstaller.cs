@@ -154,8 +154,7 @@ namespace Sahlaysta.PortableTerrariaLauncher
                     DotNetZip.DelegateExtractEntry dllEntryExtractor =
                         (string entryName, out Stream stream, out bool closeStream) =>
                         {
-                            string path = Path.Combine(new string[] { dir }
-                                .Concat(entryName.Substring(dllFolderPrefix.Length).Split('/')).ToArray());
+                            string path = Path.Combine(dir, entryName.Substring(dllFolderPrefix.Length));
                             stream = File.Open(path, FileMode.Create, FileAccess.Write);
                             closeStream = true;
                         };

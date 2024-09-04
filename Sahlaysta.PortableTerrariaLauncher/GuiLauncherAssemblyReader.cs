@@ -370,9 +370,14 @@ namespace Sahlaysta.PortableTerrariaLauncher
             {
                 if (disposed) return;
                 disposed = true;
-                using (stream)
+                if (stream != null)
                 {
+                    Stream theStream = stream;
                     stream = null;
+                    if (disposing)
+                    {
+                        theStream.Close();
+                    }
                 }
             }
 

@@ -81,8 +81,7 @@ namespace Sahlaysta.PortableTerrariaLauncher
                 };
             }
 
-            using (Stream zipStream = new GuiLauncherAssemblyReader.DotNetZipCompatibilityStream(
-                GuiLauncherAssemblyReader.GetZipStream()))
+            using (Stream zipStream = GuiLauncherAssemblyReader.GetZipStream())
             {
                 string[] entryNames = DotNetZip.ReadZipArchiveEntryNames(dotNetZipAssembly, zipStream);
 

@@ -114,8 +114,6 @@ namespace Sahlaysta.PortableTerrariaCommon
                 throw new ArgumentNullException();
             }
 
-            HashSet<string> entryNameSet = new HashSet<string>(entryNames);
-
             Type zipFileType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipFile");
             Type zipEntryType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipEntry");
             MethodInfo readMethod = ReflectionHelper.GetMethod(zipFileType, "Read", new Type[] { typeof(Stream) });
@@ -123,6 +121,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             PropertyInfo fileNameProperty = ReflectionHelper.GetProperty(zipEntryType, "FileName");
             MethodInfo extractMethod = ReflectionHelper.GetMethod(
                 zipEntryType, "Extract", new Type[] { typeof(Stream) });
+
+            HashSet<string> entryNameSet = new HashSet<string>(entryNames);
+            inStream = new DotNetZipCompatibilityReadStream(inStream);
 
             IDisposable zipEntry = (IDisposable)readMethod.Invoke(null, new object[] { inStream });
             using (zipEntry)
@@ -191,6 +192,7 @@ namespace Sahlaysta.PortableTerrariaCommon
             MethodInfo extractMethod = ReflectionHelper.GetMethod(
                 zipEntryType, "Extract", new Type[] { typeof(Stream) });
 
+            inStream = new DotNetZipCompatibilityReadStream(inStream);
             IDisposable zipEntry = (IDisposable)readMethod.Invoke(null, new object[] { inStream });
             List<string> entryNames = new List<string>();
             using (zipEntry)
@@ -260,6 +262,79 @@ namespace Sahlaysta.PortableTerrariaCommon
                     progressCallback(entriesSaved, entriesTotal);
                 }
             }
+
+        }
+
+        /*
+         * On Read() calls, fill the entire buffer as possible.
+         * Required because DotNetZip is poorly written, and has errors otherwise...
+         */
+        private class DotNetZipCompatibilityReadStream : Stream
+        {
+
+            private readonly Stream stream;
+
+            public DotNetZipCompatibilityReadStream(Stream stream)
+            {
+                this.stream = stream;
+            }
+
+            public override int Read(byte[] buffer, int offset, int count)
+            {
+                int bytesRead = 0;
+                while (true)
+                {
+                    int r = stream.Read(buffer, offset + bytesRead, count - bytesRead);
+                    if (r == 0 || bytesRead == count)
+                    {
+                        break;
+                    }
+                    bytesRead += r;
+                }
+                return bytesRead;
+            }
+
+            public override long Seek(long offset, SeekOrigin origin)
+            {
+                return stream.Seek(offset, origin);
+            }
+
+            public override long Length
+            {
+                get
+                {
+                    return stream.Length;
+                }
+            }
+
+            public override long Position
+            {
+                get
+                {
+                    return stream.Position;
+                }
+                set
+                {
+                    stream.Position = value;
+                }
+            }
+
+            protected override void Dispose(bool disposing)
+            {
+
+            }
+
+            public override void Flush()
+            {
+
+            }
+
+            public override void Write(byte[] buffer, int offset, int count) {
+                throw new NotSupportedException(); }
+            public override bool CanRead { get { return stream.CanRead; } }
+            public override bool CanWrite { get { return false; } }
+            public override bool CanSeek { get { return stream.CanSeek; } }
+            public override void SetLength(long value) { throw new NotSupportedException(); }
 
         }
 

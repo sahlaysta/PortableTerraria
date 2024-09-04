@@ -4,6 +4,10 @@ using System.Windows.Forms;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// File open dialogs, also supporting the folder browser dialog.
+    /// </summary>
     internal static class GuiFileDialogs
     {
 
@@ -573,5 +577,4 @@ namespace Sahlaysta.PortableTerrariaCommon
             FDEOR_REFUSE = 0x00000002
         }
     }
-
 }

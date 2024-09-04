@@ -4,6 +4,10 @@ using System.Reflection;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// Validation and descriptive error messages for using reflection.
+    /// </summary>
     internal static class ReflectionHelper
     {
 
@@ -18,9 +22,9 @@ namespace Sahlaysta.PortableTerrariaCommon
             MethodInfo methodInfo = type.GetMethod(name, parameterTypes);
             if (methodInfo == null)
             {
-                throw new Exception("No found method " + name + " with parameter types {"
-                    + (parameterTypes.Length == 0 ? " " : (string.Join(", ", (object[])parameterTypes) + ", "))
-                    + "} in " + type);
+                throw new Exception("No found method " + name + " with parameter types { "
+                    + (parameterTypes.Length == 0 ? " " : (string.Join(", ", (object[])parameterTypes)))
+                    + " } in " + type);
             }
             return methodInfo;
         }
@@ -42,8 +46,8 @@ namespace Sahlaysta.PortableTerrariaCommon
             if (constructorInfo == null)
             {
                 throw new Exception("No found constructor with parameter types {"
-                    + (parameterTypes.Length == 0 ? " " : (string.Join(", ", (object[])parameterTypes) + ", "))
-                    + "} in " + type);
+                    + (parameterTypes.Length == 0 ? " " : (string.Join(", ", (object[])parameterTypes)))
+                    + " } in " + type);
             }
             return constructorInfo;
         }
@@ -73,5 +77,4 @@ namespace Sahlaysta.PortableTerrariaCommon
         }
 
     }
-
 }

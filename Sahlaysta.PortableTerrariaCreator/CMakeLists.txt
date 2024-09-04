@@ -15,17 +15,20 @@ PROJECT_APPLICATIONICON
 
 PROJECT_SOURCEFILES
 "AssemblyInfo.cs"
-"CreatePortableTerrariaTask.cs"
 "GuiForm.cs"
+"GuiLauncherAssemblyWriter.cs"
 "GuiTerrariaDllPanel.cs"
 "Program.cs"
-"TerrariaDllResolver.cs"
 "../Sahlaysta.PortableTerrariaCommon/Cecil.cs"
 "../Sahlaysta.PortableTerrariaCommon/DotNetZip.cs"
 "../Sahlaysta.PortableTerrariaCommon/GuiFileDialogs.cs"
-"../Sahlaysta.PortableTerrariaCommon/GuiPanelBuilder.cs"
+"../Sahlaysta.PortableTerrariaCommon/GuiProgressDialog.cs"
+"../Sahlaysta.PortableTerrariaCommon/ManifestResources.cs"
+"../Sahlaysta.PortableTerrariaCommon/PanelBuilder.cs"
+"../Sahlaysta.PortableTerrariaCommon/PathRelativity.cs"
 "../Sahlaysta.PortableTerrariaCommon/ReflectionHelper.cs"
 "../Sahlaysta.PortableTerrariaCommon/StreamConcatenator.cs"
+"../Sahlaysta.PortableTerrariaCommon/TerrariaDllResolver.cs"
 "../Sahlaysta.PortableTerrariaCommon/ThreadStreamPiper.cs"
 
 PROJECT_VSDOTNETREFERENCES

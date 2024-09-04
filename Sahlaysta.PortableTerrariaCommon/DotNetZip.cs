@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -6,12 +7,18 @@ using System.Reflection;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// Uses the DotNetZip library to create and extract zip files.
+    /// </summary>
     internal static class DotNetZip
     {
 
         public delegate void DelegateWriteEntry(string entryName, Stream stream);
 
-        public delegate void ProgressCallback(int nEntriesProcessed, int nEntriesTotal);
+        public delegate void DelegateExtractEntry(string entryName, out Stream stream, out bool closeStream);
+
+        public delegate void ProgressCallback(int entriesProcessed, int entriesTotal);
 
         public static void WriteZipArchive(
             Assembly dotNetZipAssembly,
@@ -22,19 +29,19 @@ namespace Sahlaysta.PortableTerrariaCommon
         {
             if (dotNetZipAssembly == null || outStream == null)
             {
-                throw new ArgumentException("Null");
+                throw new ArgumentNullException();
             }
 
             entryNames = (string[])(entryNames ?? new string[] { }).Clone();
 
             if (entryNames.Length > 0 && entryWriter == null)
             {
-                throw new ArgumentException("Null");
+                throw new ArgumentNullException();
             }
 
             if (entryNames.Contains(null))
             {
-                throw new ArgumentException("Null");
+                throw new ArgumentNullException();
             }
 
             Type zipFileType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipFile");
@@ -81,6 +88,123 @@ namespace Sahlaysta.PortableTerrariaCommon
                 saveMethod.Invoke(zipFile, new object[] { outStream });
             }
 
+        }
+
+        public static void ExtractZipArchive(
+            Assembly dotNetZipAssembly,
+            Stream inStream,
+            string[] entryNames,
+            DelegateExtractEntry entryExtractor,
+            ProgressCallback progressCallback)
+        {
+            if (dotNetZipAssembly == null || inStream == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            entryNames = (string[])(entryNames ?? new string[] { }).Clone();
+
+            if (entryNames.Contains(null))
+            {
+                throw new ArgumentNullException();
+            }
+
+            if (entryNames.Length > 0 && entryExtractor == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            HashSet<string> entryNameSet = new HashSet<string>(entryNames);
+
+            Type zipFileType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipFile");
+            Type zipEntryType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipEntry");
+            MethodInfo readMethod = ReflectionHelper.GetMethod(zipFileType, "Read", new Type[] { typeof(Stream) });
+            PropertyInfo entriesProperty = ReflectionHelper.GetProperty(zipFileType, "Entries");
+            PropertyInfo fileNameProperty = ReflectionHelper.GetProperty(zipEntryType, "FileName");
+            MethodInfo extractMethod = ReflectionHelper.GetMethod(
+                zipEntryType, "Extract", new Type[] { typeof(Stream) });
+
+            IDisposable zipEntry = (IDisposable)readMethod.Invoke(null, new object[] { inStream });
+            using (zipEntry)
+            {
+                IEnumerable entries = (IEnumerable)entriesProperty.GetValue(zipEntry);
+
+                HashSet<string> zipEntryNames = new HashSet<string>(
+                    entries.Cast<object>().Select(x => (string)fileNameProperty.GetValue(x)));
+                foreach (string entryName in entryNames)
+                {
+                    if (!zipEntryNames.Contains(entryName))
+                    {
+                        throw new Exception("Entry name not found in archive: " + entryName);
+                    }
+                    if (entryName.EndsWith("/"))
+                    {
+                        throw new Exception("Entry name cannot be a folder: " + entryName);
+                    }
+                }
+
+                IEnumerator entryEnumerator = entries.GetEnumerator();
+                int entriesProcessed = 0;
+                int entriesTotal = entryNames.Length;
+                while (entryEnumerator.MoveNext())
+                {
+                    object entry = entryEnumerator.Current;
+                    string entryName = (string)fileNameProperty.GetValue(entry);
+                    if (entryNameSet.Contains(entryName))
+                    {
+                        Stream stream;
+                        bool closeStream;
+                        entryExtractor(entryName, out stream, out closeStream);
+                        if (stream == null) { throw new ArgumentNullException(); }
+                        try
+                        {
+                            extractMethod.Invoke(entry, new object[] { stream });
+                        }
+                        finally
+                        {
+                            if (closeStream)
+                            {
+                                stream.Close();
+                            }
+                        }
+                        if (progressCallback != null)
+                        {
+                            progressCallback(entriesProcessed++, entriesTotal);
+                        }
+                    }
+                }
+            }
+        }
+
+        public static string[] ReadZipArchiveEntryNames(Assembly dotNetZipAssembly, Stream inStream)
+        {
+            if (dotNetZipAssembly == null || inStream == null)
+            {
+                throw new ArgumentNullException();
+            }
+
+            Type zipFileType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipFile");
+            Type zipEntryType = ReflectionHelper.GetType(dotNetZipAssembly, "Ionic.Zip.ZipEntry");
+            MethodInfo readMethod = ReflectionHelper.GetMethod(zipFileType, "Read", new Type[] { typeof(Stream) });
+            PropertyInfo entriesProperty = ReflectionHelper.GetProperty(zipFileType, "Entries");
+            PropertyInfo fileNameProperty = ReflectionHelper.GetProperty(zipEntryType, "FileName");
+            MethodInfo extractMethod = ReflectionHelper.GetMethod(
+                zipEntryType, "Extract", new Type[] { typeof(Stream) });
+
+            IDisposable zipEntry = (IDisposable)readMethod.Invoke(null, new object[] { inStream });
+            List<string> entryNames = new List<string>();
+            using (zipEntry)
+            {
+                IEnumerable entries = (IEnumerable)entriesProperty.GetValue(zipEntry);
+                IEnumerator entryEnumerator = entries.GetEnumerator();
+                while (entryEnumerator.MoveNext())
+                {
+                    object entry = entryEnumerator.Current;
+                    string entryName = (string)fileNameProperty.GetValue(entry);
+                    entryNames.Add(entryName);
+                }
+            }
+            return entryNames.ToArray();
         }
 
         private class WriteDelegateImpl

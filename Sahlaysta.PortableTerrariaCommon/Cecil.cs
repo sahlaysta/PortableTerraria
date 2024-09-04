@@ -6,6 +6,10 @@ using System.Reflection;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// Uses the Mono.Cecil library to rewrite the embedded resources of an assembly.
+    /// </summary>
     internal static class Cecil
     {
 
@@ -28,24 +32,19 @@ namespace Sahlaysta.PortableTerrariaCommon
         {
             if (cecilAssembly == null || assemblyIn == null || assemblyOut == null)
             {
-                throw new ArgumentException("Null");
+                throw new ArgumentNullException();
             }
 
             addResourceNames = (string[])(addResourceNames ?? new string[] { }).Clone();
             removeResourceNames = (string[])(removeResourceNames ?? new string[] { }).Clone();
 
-            if (addResourceNames.Length > 0 && resourceReader == null)
-            {
-                throw new ArgumentException("Null");
-            }
+            if (addResourceNames.Contains(null) || removeResourceNames.Contains(null))
+                throw new ArgumentNullException();
 
             if (addResourceNames.Length == 0 && removeResourceNames.Length == 0)
             {
                 throw new ArgumentException("Empty");
             }
-
-            if (addResourceNames.Contains(null) || removeResourceNames.Contains(null))
-                throw new ArgumentException("Null");
 
             foreach (string addResourceName in addResourceNames)
                 if (addResourceNames.Count(x => x == addResourceName) > 1)
@@ -54,6 +53,11 @@ namespace Sahlaysta.PortableTerrariaCommon
             foreach (string addResourceName in addResourceNames)
                 if (removeResourceNames.Contains(addResourceName))
                     throw new ArgumentException("Cannot both add and remove resource: " + addResourceName);
+
+            if (addResourceNames.Length > 0 && resourceReader == null)
+            {
+                throw new ArgumentNullException();
+            }
 
             if (overrideCecilMemoryStream == null)
             {
@@ -170,7 +174,7 @@ namespace Sahlaysta.PortableTerrariaCommon
 
             private void NullCheck()
             {
-                if (stream == null) throw new ArgumentException("Null");
+                if (stream == null) { throw new ArgumentNullException(); }
             }
 
             protected override void Dispose(bool disposing)
@@ -185,7 +189,7 @@ namespace Sahlaysta.PortableTerrariaCommon
 
             private Stream GetStream()
             {
-                if (disposed) throw new ObjectDisposedException(GetType().FullName);
+                if (disposed) { throw new ObjectDisposedException(GetType().FullName); }
                 return stream;
             }
 
@@ -198,9 +202,9 @@ namespace Sahlaysta.PortableTerrariaCommon
                 return GetStream().Seek(offset, origin); }
             public override void SetLength(long value) { GetStream().SetLength(value); }
             public override long Length { get { return GetStream().Length; } }
-            public override bool CanRead { get { return GetStream().CanRead; } }
-            public override bool CanWrite { get { return GetStream().CanWrite; } }
-            public override bool CanSeek { get { return GetStream().CanSeek; } }
+            public override bool CanRead { get { return !disposed && GetStream().CanRead; } }
+            public override bool CanWrite { get { return !disposed && GetStream().CanWrite; } }
+            public override bool CanSeek { get { return !disposed && GetStream().CanSeek; } }
             public override long Position {
                 get { return GetStream().Position; } set { GetStream().Position = value; } }
 
@@ -220,7 +224,7 @@ namespace Sahlaysta.PortableTerrariaCommon
 
             public Stream NewStream(string resourceName)
             {
-                if (disposed) throw new ObjectDisposedException(GetType().FullName);
+                if (disposed) { throw new ObjectDisposedException(GetType().FullName); }
                 return new StreamManagerStream(this, resourceName);
             }
 
@@ -229,18 +233,20 @@ namespace Sahlaysta.PortableTerrariaCommon
                 if (disposed) return;
                 disposed = true;
                 drr = null;
-                current?.Close();
-                current = null;
+                using (current)
+                {
+                    current = null;
+                }
             }
 
             private class StreamManagerStream : Stream
             {
 
-                public readonly StreamManager streamManager;
-                public readonly string resourceName;
-                public Stream stream;
-                public bool closeStream;
-                public bool disposed;
+                private readonly StreamManager streamManager;
+                private readonly string resourceName;
+                private Stream stream;
+                private bool closeStream;
+                private bool disposed;
 
                 public StreamManagerStream(StreamManager streamManager, string resourceName)
                 {
@@ -250,24 +256,18 @@ namespace Sahlaysta.PortableTerrariaCommon
 
                 private Stream GetStream()
                 {
-                    if (disposed) throw new ObjectDisposedException(GetType().FullName);
+                    if (disposed) { throw new ObjectDisposedException(GetType().FullName); }
+
                     StreamManagerStream current = streamManager.current;
                     if (object.ReferenceEquals(current, this))
                     {
                         return stream;
                     }
-                    else if (current == null)
-                    {
-                        streamManager.drr(resourceName, out stream, out closeStream);
-                        if (stream == null) throw new ArgumentException("Null");
-                        streamManager.current = this;
-                        return stream;
-                    }
                     else
                     {
-                        current.Close();
+                        current?.Close();
                         streamManager.drr(resourceName, out stream, out closeStream);
-                        if (stream == null) throw new ArgumentException("Null");
+                        if (stream == null) { throw new ArgumentNullException(); }
                         streamManager.current = this;
                         return stream;
                     }
@@ -279,11 +279,14 @@ namespace Sahlaysta.PortableTerrariaCommon
                     disposed = true;
                     if (disposing)
                         streamManager.current = null;
-                    Stream theStream = stream;
-                    stream = null;
-                    if (disposing && closeStream)
+                    if (stream != null)
                     {
-                        theStream?.Close();
+                        Stream theStream = stream;
+                        stream = null;
+                        if (disposing && closeStream)
+                        {
+                            theStream.Close();
+                        }
                     }
                 }
 
@@ -296,9 +299,9 @@ namespace Sahlaysta.PortableTerrariaCommon
                     return GetStream().Seek(offset, origin); }
                 public override void SetLength(long value) { GetStream().SetLength(value); }
                 public override long Length { get { return GetStream().Length; } }
-                public override bool CanRead { get { return GetStream().CanRead; } }
-                public override bool CanWrite { get { return GetStream().CanWrite; } }
-                public override bool CanSeek { get { return GetStream().CanSeek; } }
+                public override bool CanRead { get { return !disposed && GetStream().CanRead; } }
+                public override bool CanWrite { get { return !disposed && GetStream().CanWrite; } }
+                public override bool CanSeek { get { return !disposed && GetStream().CanSeek; } }
                 public override long Position {
                     get { return GetStream().Position; } set { GetStream().Position = value; } }
 

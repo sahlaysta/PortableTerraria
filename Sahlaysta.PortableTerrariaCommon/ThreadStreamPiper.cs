@@ -4,6 +4,11 @@ using System.Threading;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// Write bytes in a new thread, and read what was written to that thread via a Stream.
+    /// This is useful to essentially convert a write operation into a readable Stream.
+    /// </summary>
     internal static class ThreadStreamPiper
     {
 
@@ -28,7 +33,10 @@ namespace Sahlaysta.PortableTerrariaCommon
                 {
                     exception = e;
                 }
-                piper.OnEnd(exception);
+                finally
+                {
+                    piper.OnEnd(exception);
+                }
             });
             piper.Thread = thread;
             thread.Start();
@@ -69,9 +77,10 @@ namespace Sahlaysta.PortableTerrariaCommon
                     throw new IndexOutOfRangeException();
                 }
                 if (count == 0) return;
+
                 lock (monitorObj)
                 {
-                    if (writeDisposed) throw new ObjectDisposedException(GetType().FullName);
+                    if (writeDisposed) { throw new ObjectDisposedException(GetType().FullName); }
                     if (end) return;
                     hasBytesToRead = true;
                     onWriteBuffer = buffer;
@@ -107,9 +116,10 @@ namespace Sahlaysta.PortableTerrariaCommon
                     throw new IndexOutOfRangeException();
                 }
                 if (count == 0) return 0;
+
                 lock (monitorObj)
                 {
-                    if (readDisposed) throw new ObjectDisposedException(GetType().FullName);
+                    if (readDisposed) { throw new ObjectDisposedException(GetType().FullName); }
                     if (end)
                     {
                         if (endException != null)
@@ -183,7 +193,7 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 lock (monitorObj)
                 {
-                    if (writeDisposed) throw new ObjectDisposedException(GetType().FullName);
+                    if (writeDisposed) { throw new ObjectDisposedException(GetType().FullName); }
                 }
             }
 
@@ -191,13 +201,29 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 lock (monitorObj)
                 {
-                    if (readDisposed) throw new ObjectDisposedException(GetType().FullName);
+                    if (readDisposed) { throw new ObjectDisposedException(GetType().FullName); }
                     if (endException != null)
                     {
                         Exception exception = endException;
                         endException = null;
                         throw new Exception("Write pipe threw exception", exception);
                     }
+                }
+            }
+
+            public bool CanWrite()
+            {
+                lock (monitorObj)
+                {
+                    return !writeDisposed;
+                }
+            }
+
+            public bool CanRead()
+            {
+                lock (monitorObj)
+                {
+                    return !readDisposed;
                 }
             }
 
@@ -229,7 +255,7 @@ namespace Sahlaysta.PortableTerrariaCommon
                 public override int Read(byte[] buffer, int offset, int count) {
                     throw new NotSupportedException(); }
                 public override bool CanRead { get { return false; } }
-                public override bool CanWrite { get { return true; } }
+                public override bool CanWrite { get { return piper.CanWrite(); } }
                 public override bool CanSeek { get { return false; } }
                 public override long Seek(long offset, SeekOrigin origin) { throw new NotSupportedException(); }
                 public override void SetLength(long value) { throw new NotSupportedException(); }
@@ -266,7 +292,7 @@ namespace Sahlaysta.PortableTerrariaCommon
 
                 public override void Write(byte[] buffer, int offset, int count) {
                     throw new NotSupportedException(); }
-                public override bool CanRead { get { return true; } }
+                public override bool CanRead { get { return piper.CanRead(); } }
                 public override bool CanWrite { get { return false; } }
                 public override bool CanSeek { get { return false; } }
                 public override long Seek(long offset, SeekOrigin origin) { throw new NotSupportedException(); }
@@ -280,5 +306,4 @@ namespace Sahlaysta.PortableTerrariaCommon
         }
 
     }
-
 }

@@ -6,8 +6,12 @@ using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
 
-namespace Sahlaysta.PortableTerrariaCreator
+namespace Sahlaysta.PortableTerrariaCommon
 {
+
+    /// <summary>
+    /// Auto-detects the filepaths of the Terraria DLLs.
+    /// </summary>
     internal static class TerrariaDllResolver
     {
 
@@ -66,12 +70,12 @@ namespace Sahlaysta.PortableTerrariaCreator
         {
 
             public readonly Dll Dll;
-            public readonly string FilePath;
+            public readonly string Filepath;
 
-            public ResolvedDll(Dll dll, string filePath)
+            public ResolvedDll(Dll dll, string filepath)
             {
                 Dll = dll;
-                FilePath = filePath;
+                Filepath = filepath;
             }
 
         }
@@ -167,7 +171,7 @@ namespace Sahlaysta.PortableTerrariaCreator
 
         }
 
-        public static string FindDllFilePathOnSystem(Dll dll, XnaFrameworkVersion xnaFrameworkVersion)
+        public static string FindDllFilepathOnSystem(Dll dll, XnaFrameworkVersion xnaFrameworkVersion)
         {
             if (dll == null)
             {
@@ -177,7 +181,7 @@ namespace Sahlaysta.PortableTerrariaCreator
             ResolvedDll resolvedDll = ResolveDll(dll);
             if (resolvedDll != null)
             {
-                return resolvedDll.FilePath;
+                return resolvedDll.Filepath;
             }
             
             if (xnaFrameworkVersion != null)
@@ -189,7 +193,7 @@ namespace Sahlaysta.PortableTerrariaCreator
                     {
                         if (xnaFrameworkVersion.Version == resolvedXnaDll.XnaFrameworkVersion)
                         {
-                            return resolvedXnaDll.ResolvedDll.FilePath;
+                            return resolvedXnaDll.ResolvedDll.Filepath;
                         }
                     }
                 }
@@ -201,7 +205,7 @@ namespace Sahlaysta.PortableTerrariaCreator
         private static ResolvedDll ResolveDll(Dll dll)
         {
             string name = dll.Name;
-            string dllFilePath = null;
+            string dllFilepath = null;
             switch (name)
             {
 
@@ -213,31 +217,31 @@ namespace Sahlaysta.PortableTerrariaCreator
                 case "xinput1_3.dll":
                 case "msvcp100.dll":
                 case "msvcr100.dll":
-                    dllFilePath =
+                    dllFilepath =
                         @"C:\Windows\System32\" + name;
                     break;
 
                 case "DSETUP.dll":
                 case "dsetup32.dll":
-                    dllFilePath =
+                    dllFilepath =
                         @"C:\Program Files (x86)\Microsoft XNA\XNA Game Studio\v4.0\Redist\DX Redist\" + name;
                     break;
 
                 case "XnaNative.dll":
-                    dllFilePath =
+                    dllFilepath =
                         @"C:\Program Files (x86)\Common Files\Microsoft Shared\XNA\Framework\v4.0\" + name;
                     break;
 
                 case "xnavisualizer.dll":
                 case "XnaVisualizerPS.dll":
-                    dllFilePath =
+                    dllFilepath =
                         @"C:\Program Files (x86)\Common Files\Microsoft Shared\XNA\Framework\Shared\" + name;
                     break;
 
             }
-            if (dllFilePath != null && File.Exists(dllFilePath))
+            if (dllFilepath != null && File.Exists(dllFilepath))
             {
-                return new ResolvedDll(dll, dllFilePath);
+                return new ResolvedDll(dll, dllFilepath);
             }
 
             return null;
@@ -269,7 +273,7 @@ namespace Sahlaysta.PortableTerrariaCreator
                     break;
 
             }
-            if (xnaBaseDir == null)
+            if (xnaBaseDir == null || !Directory.Exists(xnaBaseDir))
             {
                 return null;
             }
@@ -278,10 +282,10 @@ namespace Sahlaysta.PortableTerrariaCreator
             foreach (DirectoryInfo dir in new DirectoryInfo(xnaBaseDir).GetDirectories())
             {
                 string xnaFrameworkVersion = dir.Name;
-                string filePath = xnaBaseDir + "\\" + xnaFrameworkVersion + "\\" + name;
-                if (File.Exists(filePath))
+                string filepath = xnaBaseDir + "\\" + xnaFrameworkVersion + "\\" + name;
+                if (File.Exists(filepath))
                 {
-                    resolvedXnaDlls.Add(new ResolvedXnaDll(new ResolvedDll(dll, filePath), xnaFrameworkVersion));
+                    resolvedXnaDlls.Add(new ResolvedXnaDll(new ResolvedDll(dll, filepath), xnaFrameworkVersion));
                 }
             }
             return resolvedXnaDlls.Count > 0 ? resolvedXnaDlls.ToArray() : null;

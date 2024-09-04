@@ -5,7 +5,11 @@ using System.Windows.Forms;
 
 namespace Sahlaysta.PortableTerrariaCommon
 {
-    internal static class GuiPanelBuilder
+
+    /// <summary>
+    /// Simplify window/dialog creation and automatic resizing.
+    /// </summary>
+    internal static class PanelBuilder
     {
 
         public static Panel GlueTopToCenter(Control topControl, Control centerControl)
@@ -394,5 +398,4 @@ namespace Sahlaysta.PortableTerrariaCommon
         }
 
     }
-
 }

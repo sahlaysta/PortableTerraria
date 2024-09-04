@@ -10,20 +10,32 @@ using Sahlaysta.PortableTerrariaCommon;
 
 namespace Sahlaysta.PortableTerrariaCreator
 {
-    internal static class CreatePortableTerrariaTask
+
+    /// <summary>
+    /// Creates a Portable Terraria Launcher EXE.
+    /// 
+    /// How it works:
+    /// - Programmatically archive the entire Terraria directory (with DotNetZip)
+    /// - Allocate the archive into many small blocks/splits (this avoids the memory problem with Mono.Cecil)
+    /// - Embed into Portable Terraria Launcher's assembly
+    /// - Write the new modified assembly to an EXE file
+    /// 
+    /// Uses temp file to avoid loading the entire archive into memory.
+    /// </summary>
+    internal static class GuiLauncherAssemblyWriter
     {
 
         public delegate void EndedCallback(Exception exception);
 
-        public delegate void ProgressCallback(int nDataProcessed, int nDataTotal);
+        public delegate void ProgressCallback(int dataProcessed, int dataTotal);
 
         public static void RunInNewThread(
             Assembly dotNetZipAssembly,
             Assembly cecilAssembly,
             byte[] portableTerrariaLauncherAssembly,
-            string exeOutFilePath,
+            string exeOutFile,
             string terrariaDir,
-            string[] dllFilePaths,
+            Dictionary<TerrariaDllResolver.Dll, string> dllFilepaths,
             EndedCallback endedCallback,
             ProgressCallback progressCallback)
         {
@@ -32,8 +44,8 @@ namespace Sahlaysta.PortableTerrariaCreator
                 Exception exception = null;
                 try
                 {
-                    Run(dotNetZipAssembly, cecilAssembly, portableTerrariaLauncherAssembly, exeOutFilePath,
-                        terrariaDir, dllFilePaths, progressCallback);
+                    Run(dotNetZipAssembly, cecilAssembly, portableTerrariaLauncherAssembly, exeOutFile,
+                        terrariaDir, dllFilepaths, progressCallback);
                 }
                 catch (Exception e)
                 {
@@ -65,28 +77,41 @@ namespace Sahlaysta.PortableTerrariaCreator
             Assembly dotNetZipAssembly,
             Assembly cecilAssembly,
             byte[] portableTerrariaLauncherAssembly,
-            string exeOutFilePath,
+            string exeOutFile,
             string terrariaDir,
-            string[] dllFilePaths,
+            Dictionary<TerrariaDllResolver.Dll, string> dllFilepaths,
             ProgressCallback progressCallback)
         {
             if (dotNetZipAssembly == null || cecilAssembly == null || portableTerrariaLauncherAssembly == null
-                || exeOutFilePath == null || terrariaDir == null)
+                || exeOutFile == null || terrariaDir == null)
             {
-                throw new ArgumentException("Null");
+                throw new ArgumentNullException();
             }
 
             if (!Directory.Exists(terrariaDir))
                 throw new ArgumentException("Directory does not exist: " + terrariaDir);
 
-            dllFilePaths = (string[])(dllFilePaths ?? new string[] { }).Clone();
+            dllFilepaths =
+                dllFilepaths == null ? null : new Dictionary<TerrariaDllResolver.Dll, string>(dllFilepaths);
 
-            if (dllFilePaths.Contains(null))
-                throw new ArgumentException("Null");
-
-            foreach (string dllFilePath in dllFilePaths)
-                if (!File.Exists(dllFilePath))
-                    throw new ArgumentException("File does not exist: " + dllFilePath);
+            if (dllFilepaths != null)
+            {
+                foreach (KeyValuePair<TerrariaDllResolver.Dll, string> entry in dllFilepaths)
+                {
+                    if (entry.Key == null)
+                    {
+                        throw new ArgumentException("Null key in dictionary");
+                    }
+                    if (entry.Value == null)
+                    {
+                        throw new ArgumentException("Null value in dictionary");
+                    }
+                    if (!File.Exists(entry.Value))
+                    {
+                        throw new ArgumentException("File does not exist: " + entry.Value);
+                    }
+                }
+            }
 
             const int MaxTotalResourcesSize = 2000000000;
             const int SplitSize             = 1000000;
@@ -94,18 +119,31 @@ namespace Sahlaysta.PortableTerrariaCreator
                 MaxTotalResourcesSize / SplitSize + (MaxTotalResourcesSize % SplitSize == 0 ? 0 : 1);
 
             List<string> entryNames = new List<string>();
-            Dictionary<string, string> entryNamesToFilePath = new Dictionary<string, string>();
-            GetDirectoryZipEntriesRecursively(terrariaDir, entryNames, entryNamesToFilePath);
+            entryNames.Add("Terraria/");
+            entryNames.Add("Dlls/");
+            Dictionary<string, string> entryNamesToFilepath = new Dictionary<string, string>();
+            GetDirectoryZipEntriesRecursively(terrariaDir, "Terraria/", entryNames, entryNamesToFilepath);
+            if (dllFilepaths != null)
+            {
+                foreach (KeyValuePair<TerrariaDllResolver.Dll, string> entry in dllFilepaths)
+                {
+                    TerrariaDllResolver.Dll dll = entry.Key;
+                    string dllFilepath = entry.Value;
+                    string entryName = "Dlls/" + dll.Name;
+                    entryNames.Add(entryName);
+                    entryNamesToFilepath.Add(entryName, dllFilepath);
+                }
+            }
 
-            if (entryNamesToFilePath.Values.Sum(x => new FileInfo(x).Length) > 2000000000)
+            if (entryNamesToFilepath.Values.Sum(x => new FileInfo(x).Length) > 2000000000)
             {
                 throw new Exception("Directory is greater than 2 GB");
             }
 
             DotNetZip.DelegateWriteEntry entryWriter = (entryName, stream) =>
             {
-                string fullFilePath = entryNamesToFilePath[entryName];
-                using (FileStream fileStream = File.OpenRead(fullFilePath))
+                string file = entryNamesToFilepath[entryName];
+                using (FileStream fileStream = File.OpenRead(file))
                 {
                     fileStream.CopyTo(stream);
                 }
@@ -118,9 +156,9 @@ namespace Sahlaysta.PortableTerrariaCreator
             }
             else
             {
-                dotNetZipProgressCallback = (nEntriesProcessed, nEntriesTotal) =>
+                dotNetZipProgressCallback = (entriesProcessed, entriesTotal) =>
                 {
-                    progressCallback(nEntriesProcessed, nEntriesTotal);
+                    progressCallback(entriesProcessed, entriesTotal);
                 };
             }
 
@@ -130,11 +168,12 @@ namespace Sahlaysta.PortableTerrariaCreator
                     dotNetZipProgressCallback);
             });
 
-            string exeTempFile = exeOutFilePath + ".tmp1";
-            string cecilMemoryTempFile = exeOutFilePath + ".tmp2";
+            string exeTempFile = exeOutFile + ".tmp1";
+            string cecilMemoryTempFile = exeOutFile + ".tmp2";
 
             using (pipedZipStream)
-            using (TempFileStream exeOutStream = new TempFileStream(exeTempFile))
+            using (TempFileStream exeOutStream = new TempFileStream(exeOutFile))
+            using (TempFileStream exeTempStream = new TempFileStream(exeTempFile))
             using (TempFileStream cecilMemoryStream = new TempFileStream(cecilMemoryTempFile))
             {
 
@@ -148,7 +187,7 @@ namespace Sahlaysta.PortableTerrariaCreator
 
                 Cecil.DelegateWrite assemblyOut = (out Stream stream, out bool closeStream) =>
                 {
-                    stream = exeOutStream;
+                    stream = exeTempStream;
                     closeStream = false;
                 };
 
@@ -162,16 +201,26 @@ namespace Sahlaysta.PortableTerrariaCreator
 
                 addResourceNames.Add("GUID");
 
-                for (int i = 0; i < NumberOfSplits; i++)
+                using (SHA256 sha256 = SHA256.Create())
                 {
-                    addResourceNames.Add("ZIP_" + HashSHA256(launcherGuid + i));
+                    for (int i = 0; i < NumberOfSplits; i++)
+                    {
+                        string namePrefix = "ZIP_";
+
+                        byte[] hash = sha256.ComputeHash(Encoding.Unicode.GetBytes(launcherGuid + i));
+                        string hashAsString = string.Join("", hash.Select(x => x.ToString("X2")));
+                        string nameSuffix = hashAsString;
+
+                        string resourceName = namePrefix + nameSuffix;
+                        addResourceNames.Add(resourceName);
+                    }
                 }
 
-                byte[] splitHeaderBuffer = new byte[80];
+                byte[] splitHeaderBuffer = new byte[112];
                 byte[] splitBuffer = new byte[SplitSize - splitHeaderBuffer.Length];
                 byte[] emptyByteArray = new byte[0];
                 bool wroteGuid = false;
-                int splitsWritten = 0;
+                int splitId = 0;
                 UTF8Encoding utf8Encoding = new UTF8Encoding(false, true);
                 Cecil.DelegateReadResource resourceReader =
                     (string resourceName, out Stream stream, out bool closeStream) =>
@@ -186,18 +235,21 @@ namespace Sahlaysta.PortableTerrariaCreator
                             }
                             else
                             {
-                                splitsWritten += 1;
+                                splitId += 1;
 
                                 MemoryStream split = new MemoryStream(splitBuffer, 0, bytesRead);
 
                                 for (int i = 0; i < splitHeaderBuffer.Length; i++) { splitHeaderBuffer[i] = 0x00; }
+
                                 using (StreamWriter headerWriter =
                                     new StreamWriter(new MemoryStream(splitHeaderBuffer), utf8Encoding))
                                 {
                                     headerWriter.Write("\"FileSplitHeader\"\0\"HeaderSize=");
                                     headerWriter.Write(splitHeaderBuffer.Length);
-                                    headerWriter.Write("\"\0\"SplitID=");
-                                    headerWriter.Write(splitsWritten);
+                                    headerWriter.Write("\"\0\"SplitId=");
+                                    headerWriter.Write(splitId);
+                                    headerWriter.Write("\"\0\"NumberOfSplits=");
+                                    headerWriter.Write(NumberOfSplits);
                                     headerWriter.Write("\"");
                                 }
 
@@ -232,30 +284,23 @@ namespace Sahlaysta.PortableTerrariaCreator
                     throw new Exception("Failed to write GUID");
                 }
 
-                exeOutStream.DeleteFileOnClose = false;
+                exeTempStream.DeleteFileOnClose = false;
             }
-            File.Delete(exeOutFilePath);
-            File.Move(exeTempFile, exeOutFilePath);
-        }
-
-        private static void GetDirectoryZipEntriesRecursively(
-            string dir, List<string> entryNames, Dictionary<string, string> entryNamesToFilePath)
-        {
-            GetDirectoryZipEntriesRecursively(dir, "", entryNames, entryNamesToFilePath);
+            File.Move(exeTempFile, exeOutFile);
         }
 
         private static void GetDirectoryZipEntriesRecursively(
             string dir, string entryNamePrefix,
-            List<string> entryNames, Dictionary<string, string> entryNamesToFilePath)
+            List<string> entryNames, Dictionary<string, string> entryNamesToFilepath)
         {
             foreach (string file in Directory.EnumerateFiles(dir))
             {
                 FileInfo fileInfo = new FileInfo(file);
                 string fileName = fileInfo.Name;
-                string fullFilePath = fileInfo.FullName;
+                string fullFilepath = fileInfo.FullName;
                 string entryName = entryNamePrefix + fileName;
                 entryNames.Add(entryName);
-                entryNamesToFilePath.Add(entryName, fullFilePath);
+                entryNamesToFilepath.Add(entryName, fullFilepath);
             }
             foreach (string subdir in Directory.EnumerateDirectories(dir))
             {
@@ -263,7 +308,7 @@ namespace Sahlaysta.PortableTerrariaCreator
                 string directoryName = directoryInfo.Name;
                 string entryName = entryNamePrefix + directoryName + "/";
                 entryNames.Add(entryName);
-                GetDirectoryZipEntriesRecursively(subdir, entryName, entryNames, entryNamesToFilePath);
+                GetDirectoryZipEntriesRecursively(subdir, entryName, entryNames, entryNamesToFilepath);
             }
         }
 
@@ -281,33 +326,26 @@ namespace Sahlaysta.PortableTerrariaCreator
             }
         }
 
-        private static readonly SHA256 SHA256 = SHA256.Create();
-        private static string HashSHA256(string str)
-        {
-            byte[] hash = SHA256.ComputeHash(Encoding.Unicode.GetBytes(str));
-            return string.Join("", hash.Select(x => x.ToString("X2")));
-        }
-
         private class TempFileStream : FileStream
         {
 
-            public readonly string FilePath;
+            public readonly string Filepath;
             public bool DeleteFileOnClose = true;
             private bool disposed;
 
-            public TempFileStream(string filePath) : base(filePath, FileMode.Create, FileAccess.ReadWrite)
+            public TempFileStream(string filepath) : base(filepath, FileMode.Create, FileAccess.ReadWrite)
             {
-                FilePath = filePath;
+                Filepath = filepath;
             }
 
-            override protected void Dispose(bool disposing)
+            protected override void Dispose(bool disposing)
             {
                 if (disposed) return;
                 disposed = true;
                 base.Dispose(disposing);
                 if (DeleteFileOnClose)
                 {
-                    File.Delete(FilePath);
+                    File.Delete(Filepath);
                 }
             }
 

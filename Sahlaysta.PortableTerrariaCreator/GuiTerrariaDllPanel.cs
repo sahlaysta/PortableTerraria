@@ -9,6 +9,10 @@ using Sahlaysta.PortableTerrariaCommon;
 
 namespace Sahlaysta.PortableTerrariaCreator
 {
+
+    /// <summary>
+    /// The Terraria DLL grid view.
+    /// </summary>
     internal class GuiTerrariaDllPanel : Panel
     {
 
@@ -28,7 +32,7 @@ namespace Sahlaysta.PortableTerrariaCreator
         {
 
             public readonly TerrariaDllResolver.Dll Dll;
-            public string FilePath;
+            public string Filepath;
 
             public RowInfo(TerrariaDllResolver.Dll dll)
             {
@@ -52,6 +56,8 @@ namespace Sahlaysta.PortableTerrariaCreator
             dataGridView.SelectionMode = DataGridViewSelectionMode.FullRowSelect;
             dataGridView.EnableHeadersVisualStyles = false;
             dataGridView.MultiSelect = false;
+            dataGridView.DefaultCellStyle.SelectionForeColor = dataGridView.DefaultCellStyle.ForeColor;
+            dataGridView.DefaultCellStyle.SelectionBackColor = dataGridView.DefaultCellStyle.BackColor;
 
             statusColumn = new DataGridViewColumn(new DataGridViewTextBoxCell());
             statusColumn.DefaultCellStyle.Alignment = DataGridViewContentAlignment.MiddleCenter;
@@ -81,8 +87,7 @@ namespace Sahlaysta.PortableTerrariaCreator
                     string websiteLink = DllSourceToWebsiteLink(dllSource);
                     try
                     {
-                        Process process = Process.Start(websiteLink);
-                        process?.Dispose();
+                        Process.Start(websiteLink)?.Dispose();
                     }
                     catch (Exception ex) { Console.Error.WriteLine(ex); }
                 }
@@ -94,6 +99,7 @@ namespace Sahlaysta.PortableTerrariaCreator
                 int rowIndex = dataGridView.Rows.Add();
                 DataGridViewRow row = dataGridView.Rows[rowIndex];
                 UpdateRow(row);
+                row.Selected = false;
             }
 
             AutoImportDlls(false);
@@ -102,7 +108,7 @@ namespace Sahlaysta.PortableTerrariaCreator
             importButton = new Button();
             unimportButton = new Button();
 
-            autoImportButton.Text = "Auto-import DLLs";
+            autoImportButton.Text = "Auto-detect DLLs";
             importButton.Text = "Import DLLs from folder";
             unimportButton.Text = "Unimport all";
 
@@ -114,10 +120,10 @@ namespace Sahlaysta.PortableTerrariaCreator
             importButton.Click += (o, e) => ImportDllsFromFolder();
             unimportButton.Click += (o, e) => ResetDlls();
 
-            Panel panel1 = GuiPanelBuilder.GlueTopToCenter(autoImportButton, importButton);
-            Panel panel2 = GuiPanelBuilder.VerticallyCenter(
-                GuiPanelBuilder.GlueTopToCenter(panel1, unimportButton));
-            Panel panel3 = GuiPanelBuilder.GlueRightToCenter(panel2, dataGridView);
+            Panel panel1 = PanelBuilder.GlueTopToCenter(autoImportButton, importButton);
+            Panel panel2 = PanelBuilder.VerticallyCenter(
+                PanelBuilder.GlueTopToCenter(panel1, unimportButton));
+            Panel panel3 = PanelBuilder.GlueRightToCenter(panel2, dataGridView);
 
             int tabIndex = 1;
             dataGridView.TabIndex = tabIndex++;
@@ -130,17 +136,16 @@ namespace Sahlaysta.PortableTerrariaCreator
 
             Controls.Add(panel3);
             panel3.Dock = DockStyle.Fill;
-
         }
 
         private void UpdateRow(DataGridViewRow row)
         {
             RowInfo rowInfo = RowData[row.Index];
             row.SetValues(new object[] {
-                rowInfo.FilePath != null ? "✓" : null,
+                rowInfo.Filepath != null ? "✓" : null,
                 DllSourceToName(rowInfo.Dll.Source),
                 rowInfo.Dll.Name,
-                rowInfo.FilePath
+                rowInfo.Filepath
             });
             row.Cells[0].Style.ForeColor = Color.Green;
 
@@ -179,7 +184,7 @@ namespace Sahlaysta.PortableTerrariaCreator
             foreach (DataGridViewRow row in dataGridView.Rows)
             {
                 RowInfo rowInfo = RowData[row.Index];
-                rowInfo.FilePath = null;
+                rowInfo.Filepath = null;
                 UpdateRow(row);
             }
         }
@@ -201,8 +206,8 @@ namespace Sahlaysta.PortableTerrariaCreator
             {
                 RowInfo rowInfo = RowData[row.Index];
                 TerrariaDllResolver.Dll dll = rowInfo.Dll;
-                string dllFilePath = TerrariaDllResolver.FindDllFilePathOnSystem(dll, xnaFrameworkVersion);
-                rowInfo.FilePath = dllFilePath;
+                string dllFilepath = TerrariaDllResolver.FindDllFilepathOnSystem(dll, xnaFrameworkVersion);
+                rowInfo.Filepath = dllFilepath;
                 UpdateRow(row);
             }
         }
@@ -215,10 +220,10 @@ namespace Sahlaysta.PortableTerrariaCreator
                 foreach (DataGridViewRow row in dataGridView.Rows)
                 {
                     RowInfo rowInfo = RowData[row.Index];
-                    string dllFilePath = path + "\\" + rowInfo.Dll.Name;
-                    if (File.Exists(dllFilePath))
+                    string dllFilepath = path + "\\" + rowInfo.Dll.Name;
+                    if (File.Exists(dllFilepath))
                     {
-                        rowInfo.FilePath = dllFilePath;
+                        rowInfo.Filepath = dllFilepath;
                         UpdateRow(row);
                     }
                 }
@@ -273,12 +278,12 @@ namespace Sahlaysta.PortableTerrariaCreator
                 cancelButton.AutoSizeMode = AutoSizeMode.GrowAndShrink;
                 cancelButton.AutoSize = true;
 
-                Panel panel1 = GuiPanelBuilder.GlueTopToCenter(label, listBox);
-                Panel panel2 = GuiPanelBuilder.GlueLeftToCenter(okButton, cancelButton);
-                Panel panel3 = GuiPanelBuilder.GlueBottomToCenter(
-                    GuiPanelBuilder.HorizontallyCenter(panel2), panel1);
-                Panel mainPanel = GuiPanelBuilder.Pad(panel3, new Padding(5, 5, 5, 5));
-                GuiPanelBuilder.DockToForm(mainPanel, form);
+                Panel panel1 = PanelBuilder.GlueTopToCenter(label, listBox);
+                Panel panel2 = PanelBuilder.GlueLeftToCenter(okButton, cancelButton);
+                Panel panel3 = PanelBuilder.GlueBottomToCenter(
+                    PanelBuilder.HorizontallyCenter(panel2), panel1);
+                Panel mainPanel = PanelBuilder.Pad(panel3, new Padding(5, 5, 5, 5));
+                PanelBuilder.DockToForm(mainPanel, form);
 
                 int tabIndex = 1;
                 panel1.TabIndex = tabIndex++;

@@ -14,7 +14,7 @@ namespace Sahlaysta.PortableTerrariaCommon
     internal static class DotNetZip
     {
 
-        public delegate void DelegateWriteEntry(string entryName, Stream stream);
+        public delegate void DelegateWriteEntry(string entryName, out Stream stream, out bool closeStream);
 
         public delegate void DelegateExtractEntry(string entryName, out Stream stream, out bool closeStream);
 
@@ -223,7 +223,21 @@ namespace Sahlaysta.PortableTerrariaCommon
             {
                 if (!entryName.EndsWith("/"))
                 {
-                    entryWriter(entryName, stream);
+                    Stream dStream;
+                    bool dCloseStream;
+                    entryWriter(entryName, out dStream, out dCloseStream);
+                    if (dStream == null) { throw new ArgumentNullException(); }
+                    try
+                    {
+                        dStream.CopyTo(stream);
+                    }
+                    finally
+                    {
+                        if (dCloseStream)
+                        {
+                            dStream.Close();
+                        }
+                    }
                 }
             }
 

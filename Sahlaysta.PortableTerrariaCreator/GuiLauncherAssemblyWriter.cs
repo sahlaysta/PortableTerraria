@@ -140,14 +140,13 @@ namespace Sahlaysta.PortableTerrariaCreator
                 throw new Exception("Directory is greater than 2 GB");
             }
 
-            DotNetZip.DelegateWriteEntry entryWriter = (entryName, stream) =>
-            {
-                string file = entryNamesToFilepath[entryName];
-                using (FileStream fileStream = File.OpenRead(file))
+            DotNetZip.DelegateWriteEntry entryWriter =
+                (string entryName, out Stream stream, out bool closeStream) =>
                 {
-                    fileStream.CopyTo(stream);
-                }
-            };
+                    string file = entryNamesToFilepath[entryName];
+                    stream = File.OpenRead(file);
+                    closeStream = true;
+                };
 
             DotNetZip.ProgressCallback dotNetZipProgressCallback;
             if (progressCallback == null)
